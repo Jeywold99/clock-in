@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+<h1>{{ heading }}</h1>
+<form method="post" class="entry-form">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+  {% for field in form.visible_fields %}
+  <div class="field {% if field.field.widget.input_type == 'checkbox' %}checkbox-field{% endif %}">
+    {% if field.field.widget.input_type == 'checkbox' %}
+    <label>{{ field }} {{ field.label }}</label>
+    {% else %}
+    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+    {{ field }}
+    {% endif %}
+    {% if field.help_text %}<p class="muted">{{ field.help_text }}</p>{% endif %}
+    {{ field.errors }}
+  </div>
+  {% endfor %}
+  <button type="submit" class="button primary">Save</button>
+  <a class="button" href="{% url back %}">Cancel</a>
+</form>
+{% endblock %}

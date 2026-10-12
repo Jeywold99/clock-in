@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load tracker_extras %}
+
+{% block title %}{{ heading }}{% endblock %}
+
+{% block content %}
+<h1>{{ heading }}</h1>
+
+{% if show_overlap_confirm %}
+<div class="overlap-warning">
+  <p><strong>Heads up:</strong> this entry overlaps with
+    {{ overlaps|length }} existing entr{{ overlaps|length|pluralize:"y,ies" }}:</p>
+  <ul>
+    {% for other in overlaps %}
+    <li>
+      {{ other.project }} — {{ other.started_at|date:"D j M H:i" }}
+      to {% if other.is_running %}<em>now (running)</em>{% else %}{{ other.ended_at|date:"H:i" }}{% endif %}
+      {% if other.description %}<span class="muted">({{ other.description }})</span>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  <p class="muted">Overlaps are allowed — sometimes deliberate — but double-check your times.</p>
+</div>
+{% endif %}
+
+<form method="post" class="entry-form">
+  {% csrf_token %}
+  {% if form.non_field_errors %}<div class="form-errors">{{ form.non_field_errors }}</div>{% endif %}
+
+  <div class="field">
+    <label for="{{ form.project.id_for_label }}">Project</label>
+    {{ form.project }}{{ form.project.errors }}
+  </div>
+  <div class="field">
+    <label for="{{ form.description.id_for_label }}">Description</label>
+    {{ form.description }}{{ form.description.errors }}
+  </div>
+  <div class="field-row">
+    <div class="field">
+      <label for="{{ form.started_at.id_for_label }}">Start</label>
+      {{ form.started_at }}{{ form.started_at.errors }}
+    </div>
+    <div class="field">
+      <label for="{{ form.ended_at.id_for_label }}">End</label>
+      {{ form.ended_at }}{{ form.ended_at.errors }}
+      {% if entry.is_running %}<p class="muted">Leave blank to keep the timer running.</p>{% endif %}
+    </div>
+  </div>
+  <div class="field-row">
+    <div class="field checkbox-field">
+      <label>{{ form.is_billable }} Billable</label>{{ form.is_billable.errors }}
+    </div>
+    <div class="field">
+      <label for="{{ form.rate_applied.id_for_label }}">Hourly rate</label>
+      {{ form.rate_applied }}{{ form.rate_applied.errors }}
+      <p class="muted">{{ form.rate_applied.help_text }}</p>
+    </div>
+  </div>
+  <div class="field">
+    <label>Tags</label>
+    <div class="tag-checkboxes">{{ form.tags }}</div>{{ form.tags.errors }}
+  </div>
+
+  {% if show_overlap_confirm %}
+  <input type="hidden" name="confirm_overlap" value="1">
+  <button type="submit" class="button primary">Save anyway</button>
+  {% else %}
+  <button type="submit" class="button primary">Save</button>
+  {% endif %}
+  <a class="button" href="{% url 'entry_list' %}">Cancel</a>
+</form>
+{% endblock %}

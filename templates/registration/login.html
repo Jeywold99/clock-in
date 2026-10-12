@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block title %}Clock in{% endblock %}
+
+{% block content %}
+<div class="ghost-bg">Clock In</div>
+<div class="auth-card">
+  <h1>Clock in<span class="dot">.</span></h1>
+  <p class="sub">Time is billable. Log in and get moving.</p>
+  {% if form.non_field_errors %}
+  <div class="form-errors">{{ form.non_field_errors }}</div>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <div class="field">
+      <label for="{{ form.username.id_for_label }}">Username</label>
+      {{ form.username }}
+    </div>
+    <div class="field">
+      <label for="{{ form.password.id_for_label }}">Password</label>
+      {{ form.password }}
+    </div>
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="button primary">Log in →</button>
+  </form>
+</div>
+{% endblock %}

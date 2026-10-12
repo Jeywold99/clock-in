@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Team{% endblock %}
+
+{% block content %}
+<div class="dash-head">
+  <h1>Team</h1>
+  <a class="button primary" href="{% url 'team_create' %}">New user</a>
+</div>
+
+<table>
+  <thead>
+    <tr><th>Username</th><th>Name</th><th>Email</th><th>Role</th><th>Timezone</th><th>Entries</th><th>Status</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for member in users %}
+    <tr {% if not member.is_active %}class="archived-row"{% endif %}>
+      <td>{{ member.username }}</td>
+      <td>{{ member.get_full_name|default:"—" }}</td>
+      <td>{{ member.email|default:"—" }}</td>
+      <td>{{ member.get_role_display }}</td>
+      <td>{{ member.timezone }}</td>
+      <td>{{ member.entry_count }}</td>
+      <td>{% if member.is_active %}Active{% else %}<span class="tag">deactivated</span>{% endif %}</td>
+      <td><a href="{% url 'team_edit' member.pk %}">Edit</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

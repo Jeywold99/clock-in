@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}Projects{% endblock %}
+
+{% block content %}
+<div class="dash-head">
+  <h1>Projects</h1>
+  <div>
+    {% if show_archived %}
+    <a class="muted" href="{% url 'project_list' %}">Hide archived</a>
+    {% else %}
+    <a class="muted" href="{% url 'project_list' %}?archived=1">Show archived</a>
+    {% endif %}
+    <a class="button primary" href="{% url 'project_create' %}">New project</a>
+  </div>
+</div>
+
+{% if projects %}
+<table>
+  <thead>
+    <tr><th>Project</th><th>Client</th><th>Hourly rate</th><th>Billable by default</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for project in projects %}
+    <tr {% if project.is_archived %}class="archived-row"{% endif %}>
+      <td>{{ project.name }}{% if project.is_archived %} <span class="tag">archived</span>{% endif %}</td>
+      <td>{{ project.client.name }}</td>
+      <td>{% if project.hourly_rate %}{{ project.client.currency }} {{ project.hourly_rate }}{% else %}—{% endif %}</td>
+      <td>{{ project.is_billable_default|yesno:"Yes,No" }}</td>
+      <td><a href="{% url 'project_edit' project.pk %}">Edit</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No projects yet.</p>
+{% endif %}
+{% endblock %}

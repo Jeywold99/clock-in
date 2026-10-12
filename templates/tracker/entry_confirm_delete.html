@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% load tracker_extras %}
+
+{% block title %}Delete entry{% endblock %}
+
+{% block content %}
+<h1>Delete this entry?</h1>
+<p>
+  <strong>{{ entry.project }}</strong> — {{ entry.started_at|date:"D j M H:i" }}
+  {% if entry.is_running %}(running){% else %}to {{ entry.ended_at|date:"H:i" }}{% endif %},
+  {{ entry.duration|hm }}
+  {% if entry.description %}<span class="muted">({{ entry.description }})</span>{% endif %}
+</p>
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="button danger">Delete entry</button>
+  <a class="button" href="{% url 'entry_list' %}">Cancel</a>
+</form>
+{% endblock %}

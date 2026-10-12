@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}Tags{% endblock %}
+
+{% block content %}
+<h1>Tags</h1>
+
+<form method="post" class="filter-row">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="create">
+  {{ form.name }}
+  <button type="submit" class="button primary">Add tag</button>
+</form>
+{% if form.errors %}
+<div class="form-errors">{{ form.non_field_errors }}{{ form.name.errors }}</div>
+{% endif %}
+
+{% if tags %}
+<table class="tags-table">
+  <thead><tr><th>Tag</th><th>Entries</th><th></th></tr></thead>
+  <tbody>
+    {% for tag in tags %}
+    <tr>
+      <td>
+        <form method="post" class="inline-form">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="rename">
+          <input type="hidden" name="tag_id" value="{{ tag.pk }}">
+          <input type="text" name="name" value="{{ tag.name }}" maxlength="50">
+          <button type="submit" class="button">Rename</button>
+        </form>
+      </td>
+      <td>{{ tag.entry_count }}</td>
+      <td>
+        <form method="post" class="inline-form"
+              onsubmit="return confirm('Delete “{{ tag.name }}”? It will be removed from {{ tag.entry_count }} entr{{ tag.entry_count|pluralize:"y,ies" }}.');">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="delete">
+          <input type="hidden" name="tag_id" value="{{ tag.pk }}">
+          <button type="submit" class="link-button">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No tags yet.</p>
+{% endif %}
+{% endblock %}

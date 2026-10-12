@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load tracker_extras %}
+
+{% block title %}Reports{% endblock %}
+
+{% block content %}
+<div class="dash-head">
+  <h1>Summary report</h1>
+  <div>
+    <a class="button" href="{% url 'report_timesheet' %}">Weekly timesheet</a>
+    <a class="button primary" href="{% url 'report_export_csv' %}?{{ querystring }}">Export CSV</a>
+  </div>
+</div>
+
+<form method="get" class="filter-row">
+  <label>From <input type="date" name="from" value="{{ filters.from }}"></label>
+  <label>To <input type="date" name="to" value="{{ filters.to }}"></label>
+  <label>Client
+    <select name="client">
+      <option value="">All clients</option>
+      {% for c in clients %}
+      <option value="{{ c.pk }}" {% if filters.client == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Project
+    <select name="project">
+      <option value="">All projects</option>
+      {% for p in projects %}
+      <option value="{{ p.pk }}" {% if filters.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Billable
+    <select name="billable">
+      <option value="">All</option>
+      <option value="yes" {% if filters.billable == "yes" %}selected{% endif %}>Billable</option>
+      <option value="no" {% if filters.billable == "no" %}selected{% endif %}>Non-billable</option>
+    </select>
+  </label>
+  {% if team %}
+  <label>Person
+    <select name="user">
+      <option value="">Everyone</option>
+      {% for member in team %}
+      <option value="{{ member.pk }}" {% if filters.user == member.pk|stringformat:"s" %}selected{% endif %}>{{ member.username }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <button type="submit" class="button">Apply</button>
+</form>
+
+{% if client_rows %}
+<table class="report-table">
+  <thead>
+    <tr><th>Client / project</th><th>Hours</th><th>Billable</th><th>Amount</th></tr>
+  </thead>
+  <tbody>
+    {% for row in client_rows %}
+    <tr class="client-row">
+      <td>{{ row.client.name }}</td>
+      <td>{{ row.duration|hm }}</td>
+      <td>{{ row.billable|hm }}</td>
+      <td>{{ row.client.currency }} {{ row.amount|money }}</td>
+    </tr>
+    {% for prow in row.project_rows %}
+    <tr class="project-row">
+      <td class="indent">{{ prow.project.name }}</td>
+      <td>{{ prow.duration|hm }}</td>
+      <td>{{ prow.billable|hm }}</td>
+      <td>{{ row.client.currency }} {{ prow.amount|money }}</td>
+    </tr>
+    {% endfor %}
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="grand-row">
+      <td>Total</td>
+      <td>{{ grand.duration|hm }}</td>
+      <td>{{ grand.billable|hm }} <span class="muted">({{ nonbillable|hm }} non-billable)</span></td>
+      <td>
+        {% for currency, amount in grand_amounts %}
+        {{ currency }} {{ amount|money }}{% if not forloop.last %} · {% endif %}
+        {% empty %}—{% endfor %}
+      </td>
+    </tr>
+  </tfoot>
+</table>
+{% else %}
+<p class="muted">No time in this range.</p>
+{% endif %}
+{% endblock %}

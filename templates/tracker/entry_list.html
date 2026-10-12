@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load tracker_extras %}
+
+{% block title %}Entries{% endblock %}
+
+{% block content %}
+<div class="dash-head">
+  <h1>Time entries</h1>
+  <a class="button primary" href="{% url 'entry_create' %}">Add entry</a>
+</div>
+
+<form method="get" class="filter-row">
+  <label>From <input type="date" name="from" value="{{ filters.from }}"></label>
+  <label>To <input type="date" name="to" value="{{ filters.to }}"></label>
+  <label>Project
+    <select name="project">
+      <option value="">All projects</option>
+      {% for p in projects %}
+      <option value="{{ p.pk }}" {% if filters.project == p.pk|stringformat:"s" %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  <label>Billable
+    <select name="billable">
+      <option value="">All</option>
+      <option value="yes" {% if filters.billable == "yes" %}selected{% endif %}>Billable</option>
+      <option value="no" {% if filters.billable == "no" %}selected{% endif %}>Non-billable</option>
+    </select>
+  </label>
+  {% if team %}
+  <label>Person
+    <select name="user">
+      <option value="">Everyone</option>
+      {% for member in team %}
+      <option value="{{ member.pk }}" {% if filters.user == member.pk|stringformat:"s" %}selected{% endif %}>{{ member.username }}</option>
+      {% endfor %}
+    </select>
+  </label>
+  {% endif %}
+  <button type="submit" class="button">Filter</button>
+  {% if querystring %}<a class="muted" href="{% url 'entry_list' %}">Clear</a>{% endif %}
+</form>
+
+{% if page.object_list %}
+<table>
+  <thead>
+    <tr>
+      {% if user.is_admin %}<th>Who</th>{% endif %}
+      <th>Date</th><th>Project</th><th>Description</th><th>Time</th><th>Duration</th><th>Amount</th><th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for entry in page.object_list %}
+    <tr>
+      {% if user.is_admin %}<td>{{ entry.user.username }}</td>{% endif %}
+      <td>{{ entry.started_at|date:"D j M" }}</td>
+      <td>{{ entry.project }}</td>
+      <td>{{ entry.description|default:"—" }}
+        {% for tag in entry.tags.all %}<span class="tag">{{ tag }}</span>{% endfor %}
+        {% if not entry.is_billable %}<span class="tag nonbillable">non-billable</span>{% endif %}
+      </td>
+      <td>{{ entry.started_at|time:"H:i" }}–{% if entry.is_running %}<em>now</em>{% else %}{{ entry.ended_at|time:"H:i" }}{% endif %}</td>
+      <td>{{ entry.duration|hm }}</td>
+      <td>{% if entry.amount is not None %}{{ entry.project.client.currency }} {{ entry.amount|money }}{% else %}—{% endif %}</td>
+      <td class="row-actions">
+        <a href="{% url 'entry_edit' entry.pk %}">Edit</a>
+        <a href="{% url 'entry_delete' entry.pk %}">Delete</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% if page.has_other_pages %}
+<div class="pagination">
+  {% if page.has_previous %}
+  <a href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ page.previous_page_number }}">← Newer</a>
+  {% endif %}
+  <span class="muted">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+  {% if page.has_next %}
+  <a href="?{{ querystring }}{% if querystring %}&{% endif %}page={{ page.next_page_number }}">Older →</a>
+  {% endif %}
+</div>
+{% endif %}
+{% else %}
+<p class="muted">No entries match these filters.</p>
+{% endif %}
+{% endblock %}

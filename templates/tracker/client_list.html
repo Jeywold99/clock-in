@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Clients{% endblock %}
+
+{% block content %}
+<div class="dash-head">
+  <h1>Clients</h1>
+  <div>
+    {% if show_archived %}
+    <a class="muted" href="{% url 'client_list' %}">Hide archived</a>
+    {% else %}
+    <a class="muted" href="{% url 'client_list' %}?archived=1">Show archived</a>
+    {% endif %}
+    <a class="button primary" href="{% url 'client_create' %}">New client</a>
+  </div>
+</div>
+
+{% if clients %}
+<table>
+  <thead>
+    <tr><th>Client</th><th>Contact</th><th>Currency</th><th>Projects</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for client in clients %}
+    <tr {% if client.is_archived %}class="archived-row"{% endif %}>
+      <td>{{ client.name }}{% if client.is_archived %} <span class="tag">archived</span>{% endif %}</td>
+      <td>{{ client.contact_email|default:"—" }}</td>
+      <td>{{ client.currency }}</td>
+      <td>
+        {% for project in client.projects.all %}
+        {{ project.name }}{% if project.is_archived %} <span class="tag">archived</span>{% endif %}{% if not forloop.last %}, {% endif %}
+        {% empty %}—{% endfor %}
+      </td>
+      <td><a href="{% url 'client_edit' client.pk %}">Edit</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">No clients yet — create one to start organizing projects.</p>
+{% endif %}
+{% endblock %}

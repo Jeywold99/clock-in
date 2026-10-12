@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% load static tracker_extras %}
+
+{% block title %}Timer{% endblock %}
+
+{% block content %}
+<div class="timer-card" {% if running %}data-entry-id="{{ running.pk }}"{% endif %}>
+  {% if running %}
+  <div id="idle-banner" class="idle-banner {% if not is_idle %}hidden{% endif %}"
+       data-idle-threshold="{{ idle_threshold_seconds }}">
+    <p><strong>Still working?</strong> This timer has been running for
+      <span class="js-elapsed-long"></span>. Clock out or keep pushing.</p>
+    <div class="idle-actions">
+      <button type="button" class="button" id="idle-dismiss">Keep going</button>
+      <form method="post" action="{% url 'timer_stop' %}">{% csrf_token %}
+        <button type="submit" class="button primary">Clock out now</button>
+      </form>
+      <form method="post" action="{% url 'timer_discard' %}"
+            onsubmit="return confirm('Discard this timer? Nothing will be recorded.');">
+        {% csrf_token %}
+        <button type="submit" class="button danger">Discard</button>
+      </form>
+    </div>
+    <p class="muted">Tip: stop now, then edit the entry's end time — editing is painless.</p>
+  </div>
+
+  <div class="timer-running">
+    <div>
+      <div class="timer-project">{{ running.project }}</div>
+      {% if running.description %}<div class="muted">{{ running.description }}</div>{% endif %}
+      <div class="muted">started {{ running.started_at|time:"H:i" }}
+        {% for tag in running.tags.all %}<span class="tag">{{ tag }}</span>{% endfor %}
+      </div>
+    </div>
+    <div class="timer-clock js-elapsed" data-started-epoch="{{ running.started_at|date:'U' }}">
+      {{ running.duration|hm }}
+    </div>
+    <div class="timer-actions">
+      <form method="post" action="{% url 'timer_stop' %}">{% csrf_token %}
+        <button type="submit" class="button primary">Clock out</button>
+      </form>
+      <a class="button" href="{% url 'entry_edit' running.pk %}">Edit</a>
+      <form method="post" action="{% url 'timer_discard' %}"
+            onsubmit="return confirm('Discard this timer? Nothing will be recorded.');">
+        {% csrf_token %}
+        <button type="submit" class="button danger">Discard</button>
+      </form>
+    </div>
+  </div>
+  {% else %}
+  <form method="post" action="{% url 'timer_start' %}" class="timer-start-form">
+    {% csrf_token %}
+    <div class="timer-start-row">
+      {{ start_form.project }}
+      {{ start_form.description }}
+      <button type="submit" class="button primary">Clock in →</button>
+    </div>
+    <details class="tag-picker">
+      <summary class="muted">Tags</summary>
+      {{ start_form.tags }}
+    </details>
+  </form>
+  {% endif %}
+</div>
+
+<div class="dash-head">
+  <h2>Today</h2>
+  <div class="muted">This week: <strong>{{ week_total|hm }}</strong> ·
+    <a href="{% url 'entry_create' %}">Add entry manually</a></div>
+</div>
+
+{% if today_entries %}
+<table>
+  <thead>
+    <tr><th>Project</th><th>Description</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr>
+  </thead>
+  <tbody>
+    {% for entry in today_entries %}
+    <tr>
+      <td>{{ entry.project }}</td>
+      <td>{{ entry.description|default:"—" }}
+        {% for tag in entry.tags.all %}<span class="tag">{{ tag }}</span>{% endfor %}
+        {% if not entry.is_billable %}<span class="tag nonbillable">non-billable</span>{% endif %}
+      </td>
+      <td>{{ entry.started_at|time:"H:i" }}</td>
+      <td>{% if entry.is_running %}<em>running</em>{% else %}{{ entry.ended_at|time:"H:i" }}{% endif %}</td>
+      <td>{{ entry.duration|hm }}</td>
+      <td><a href="{% url 'entry_edit' entry.pk %}">Edit</a></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% else %}
+<p class="muted">Nothing tracked today. Clock in and make it count.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}<script src="{% static 'js/timer.js' %}"></script>{% endblock %}

@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% load tracker_extras %}
+
+{% block title %}Timesheet{% endblock %}
+
+{% block content %}
+<div class="dash-head">
+  <h1>Weekly timesheet</h1>
+  <a class="button" href="{% url 'report_summary' %}">Summary report</a>
+</div>
+
+<div class="week-nav">
+  <a class="button" href="?week={{ prev_week|date:'Y-m-d' }}{% if team and subject != user %}&user={{ subject.pk }}{% endif %}">← Previous</a>
+  <strong>Week of {{ week_start|date:"j M Y" }}</strong>
+  <a class="button" href="?week={{ next_week|date:'Y-m-d' }}{% if team and subject != user %}&user={{ subject.pk }}{% endif %}">Next →</a>
+  {% if team %}
+  <form method="get" class="inline-form">
+    <input type="hidden" name="week" value="{{ week_start|date:'Y-m-d' }}">
+    <select name="user" onchange="this.form.requestSubmit()">
+      {% for member in team %}
+      <option value="{{ member.pk }}" {% if member == subject %}selected{% endif %}>{{ member.username }}</option>
+      {% endfor %}
+    </select>
+    <noscript><button type="submit" class="button">View</button></noscript>
+  </form>
+  {% endif %}
+</div>
+
+{% if rows %}
+<div class="table-scroll">
+<table class="timesheet">
+  <thead>
+    <tr>
+      <th>Project</th>
+      {% for day in days %}<th>{{ day|date:"D j" }}</th>{% endfor %}
+      <th>Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for row in rows %}
+    <tr>
+      <td>{{ row.project }}</td>
+      {% for cell in row.cells %}
+      <td>
+        {% if cell.duration %}
+        <a href="{% url 'entry_list' %}?from={{ cell.day|date:'Y-m-d' }}&to={{ cell.day|date:'Y-m-d' }}&project={{ row.project.pk }}{% if team %}&user={{ subject.pk }}{% endif %}"
+           title="View and edit these entries">{{ cell.duration|hm }}</a>
+        {% else %}<span class="muted">·</span>{% endif %}
+      </td>
+      {% endfor %}
+      <td><strong>{{ row.total|hm }}</strong></td>
+    </tr>
+    {% endfor %}
+  </tbody>
+  <tfoot>
+    <tr class="grand-row">
+      <td>Total</td>
+      {% for total in day_totals %}<td>{% if total %}{{ total|hm }}{% else %}<span class="muted">·</span>{% endif %}</td>{% endfor %}
+      <td>{{ week_total|hm }}</td>
+    </tr>
+  </tfoot>
+</table>
+</div>
+<p class="muted">Click any cell to view and edit those entries.</p>
+{% else %}
+<p class="muted">No time tracked by {{ subject.username }} this week.</p>
+{% endif %}
+{% endblock %}

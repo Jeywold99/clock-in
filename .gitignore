@@ -1,0 +1,9 @@
+__pycache__/
+*.py[cod]
+.venv/
+/data/
+/staticfiles/
+.env
+*.sqlite3
+.DS_Store
+.claude/

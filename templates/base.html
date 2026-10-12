@@ -1,0 +1,51 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Clock In{% endblock %} · CLOCK IN — GSD HQ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="{% url 'dashboard' %}">Clock<span class="star">*</span>In</a>
+    {% if user.is_authenticated %}
+    <nav>
+      <a href="{% url 'dashboard' %}">Timer</a>
+      <a href="{% url 'entry_list' %}">Entries</a>
+      <a href="{% url 'report_summary' %}">Reports</a>
+      <a href="{% url 'report_timesheet' %}">Timesheet</a>
+      <a href="{% url 'tag_list' %}">Tags</a>
+      {% if user.is_admin %}
+      <a href="{% url 'client_list' %}">Clients</a>
+      <a href="{% url 'project_list' %}">Projects</a>
+      <a href="{% url 'team_list' %}">Team</a>
+      {% endif %}
+      {% comment %} Phase 4 adds Reports {% endcomment %}
+    </nav>
+    <div class="topbar-user">
+      <a href="{% url 'settings' %}">{{ user.username }}</a>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="link-button">Log out</button>
+      </form>
+    </div>
+    {% endif %}
+  </header>
+
+  <main class="container">
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li class="message {{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  {% block scripts %}{% endblock %}
+</body>
+</html>
